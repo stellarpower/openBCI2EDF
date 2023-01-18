@@ -1,3 +1,5 @@
+#!/usr/bin/env octave-cli
+
 % Created by Diego Alvarez-Estevez (http://dalvarezestevez.com)
 % Last modified 19/01/2018
 
@@ -31,7 +33,7 @@ skipFirstLines = 0;
 % Sampling frequency of the signals, depends on OpenBCI configuration, default is 250 Hz
 fs = 250;
 % Number of channels (default in OpenBCI is 8)
-nchannels = 8;
+nchannels = 16;
 % Signal filtering paramaters
 highpass_f = 0.1; % High-pass cut-off frequency
 notch_fc = 50; % Frequency of mains interference (50 Hz for Europe)
@@ -40,11 +42,17 @@ notch_w = 1; % Notch filter bandwith
 %% CONVERSION SCRIPT STARTS
 
 % Ask the user to select the source file
-[filename, path] = uigetfile(['.', filesep, '*.*'], 'Select file in OpenBCI format');
-if (filename == 0)
-    return;
-end
-fullfilename = fullfile(path, filename);
+
+%   [filename, path] = uigetfile(['.', filesep, '*.*'], 'Select file in OpenBCI format');
+%   if (filename == 0)
+%       return;
+%   end
+%   fullfilename = fullfile(path, filename);
+
+
+arg_list = argv ();
+
+fullfilename = arg_list{1};
 
 % Asks some necessary data to the user
 disp('Please provide the following information to complete the header information of the EDF file');
@@ -54,15 +62,19 @@ disp('Check www.edfplus.info/specs/edf.html for detailed information');
 % recId = 'XXX';
 % startdate = '23.06.17';
 % starttime = '00.08.52';
-patId = input('\nSpecify the local patient identification string\n(max 80 characters, press [ENTER] to continue): ', 's');
-recId = input('\nSpecify the local recording identification string\n(max 80 characters, press [ENTER] to continue): ' , 's');
-startdate = input('\nSpecify the Startdate of recording\n(DD.MM.YY, press [ENTER] to continue): ', 's');
-starttime = input('\nSpecify the Starttime of recording\n(HH.MM.SS, press [ENTER] to continue): ', 's');
+
+patId = 'Patient   ID';  % input('\nSpecify the local patient identification string\n(max 80 characters, press [ENTER] to continue): ', 's');
+recId = 'Recording ID';  % input('\nSpecify the local recording identification string\n(max 80 characters, press [ENTER] to continue): ' , 's');
+startdate = '01.01.70';  % input('\nSpecify the Startdate of recording\n(DD.MM.YY, press [ENTER] to continue): ', 's');
+starttime = '00.00.00';  % input('\nSpecify the Starttime of recording\n(HH.MM.SS, press [ENTER] to continue): ', 's');
 
 % Read OpenBCI data
 fprintf(1, '\nReading OpenBCI data...');
 data = csvread(fullfilename, skipFirstLines, 0);
-eegdata = data(:, 2:9);          
+
+lastColumn = nchannels + 1
+%   eegdata = data(:, 2:9);
+eegdata = data(:, 2:lastColumn);          
 
 % Apply signal filtering
 fprintf(1, '\nFiltering signals...\n');
@@ -74,7 +86,10 @@ end
 
 % Export unfiltered data
 disp('Writing signals (unfiltered) to EDF file...');
-filename1 = [filename, '-raw.edf'];
+
+%   filename1 = [filename, '-raw.edf'];
+filename1 = [arg_list{2}, '-raw.edf'];
+
 signals = [];
 snames = [];
 units = [];
@@ -101,7 +116,10 @@ end
 
 % Export filtered data
 disp('Writing signals (filtered) to EDF file...');
-filename1 = [filename, '-filt.edf'];
+
+%   filename1 = [filename, '-filt.edf'];
+filename1 = [arg_list{2}, '-filt.edf'];
+
 signals = [];
 snames = [];
 units = [];
